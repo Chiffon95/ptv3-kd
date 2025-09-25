@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# Virtual env
+.venv/
+.venvs/
+env/
+venv/
+
+# Logs
+logs/
+wandb/
+*.log
+
+# Checkpoints
+checkpoints/
+*.pth
+*.pt
+
+# Data
+data/
