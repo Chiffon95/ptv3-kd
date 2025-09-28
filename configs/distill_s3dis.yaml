@@ -1,0 +1,94 @@
+# ===== Data =====
+data:
+  root: "./data/s3dis"
+  train_split: "train"
+  val_split: "val"
+  num_classes: 13
+  feature_keys: ["normal", "color"]
+  use_offset: true
+  voxel_size: 0.06
+
+# ===== Dataloader =====
+loader:
+  batch_size: 2
+  num_workers: 4
+  pin_memory: true
+  persistent_workers: true
+  shuffle_train: true
+
+# ===== Models =====
+student:
+  name: "PTv3KD"
+  cfg: "./configs/mini_ptv3.yaml"     # 학생 스펙 (더 경량화)
+
+teacher:
+  name: "PTv3KD"
+  cfg: "./configs/teacher_1_3.yaml"   # 교사 스펙 (1/3 스케일)
+  ckpt: "./checkpoints/teacher_best.pt"
+  eval_only: true
+
+# ===== Loss =====
+loss:
+  ce:
+    name: "cross_entropy"
+    ignore_index: -1
+    weight: null
+
+  kd:
+    name: "logit_kd"
+    temperature: 2.0      # Softmax 온도
+    alpha: 0.6            # KD 비중 (0.0~1.0)
+    reduction: "batchmean"
+
+# (선택) Feature distillation — 필요시 활성화
+feat_kd:
+  enable: false
+  layers: ["enc1","enc2","enc3"]
+  proj_dim: 128
+  weight: 0.3
+
+# ===== Optimizer & Scheduler (Student) =====
+optim:
+  name: "adamw"
+  lr: 6.0e-4
+  weight_decay: 0.05
+  betas: [0.9, 0.999]
+
+sched:
+  name: "cosine"
+  epochs: 60
+  warmup_epochs: 5
+  min_lr: 1.0e-6
+
+# ===== Training =====
+train:
+  amp: true
+  grad_clip_norm: 1.0
+  seed: 42
+  val_interval: 1
+  save_best_metric: "sem_mIoU"
+  resume: ""
+
+# ===== Logging / Checkpoint =====
+log:
+  dir: "./logs"
+  interval_iter: 50
+
+ckpt:
+  dir: "./checkpoints"
+  keep_last: 3
+  best_name: "student_best_sem_mIoU.pt"
+  latest_name: "student_latest.pt"
+
+# ===== Metrics =====
+metrics:
+  ignore_index: -1
+  names: ["point_acc", "sem_mAcc", "sem_mIoU", "fwIoU"]
+  log:
+    per_class_iou: true
+    confusion_matrix: true
+
+# ===== Device =====
+device:
+  gpu: true
+  devices: [0]

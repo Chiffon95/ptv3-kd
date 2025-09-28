@@ -1,0 +1,80 @@
+# ===== Data =====
+data:
+  root: "./data/s3dis"
+  train_split: ""
+  val_split: ""
+  num_classes: 13
+  feature_keys: ["normal", "color"]
+  use_offset: true
+  voxel_size: 0.06
+  # 사용 영역 지정
+  train_areas: ["Area_1"]
+  val_areas: ["Area_3"]
+
+# ===== Dataloader =====
+loader:
+  batch_size: 1
+  num_workers: 4
+  pin_memory: true
+  persistent_workers: true
+  shuffle_train: true
+
+# ===== Model =====
+model:
+  name: "PTv3KD"
+  patch:
+    size: 64   # 메모리 여유용
+
+# ===== Loss =====
+loss:
+  name: "cross_entropy"
+  ignore_index: -1
+  weight: null
+
+# ===== Metrics =====
+metrics:
+  ignore_index: -1
+  names: ["point_acc", "sem_mAcc", "sem_mIoU", "fwIoU"]
+  log:
+    per_class_iou: true
+    confusion_matrix: true
+
+# ===== Optimizer & Scheduler =====
+optim:
+  name: "adamw"
+  lr: 8.0e-4
+  weight_decay: 0.05
+  betas: [0.9, 0.999]
+
+sched:
+  name: "cosine"
+  epochs: 60
+  warmup_epochs: 5
+  min_lr: 1.0e-6
+
+# ===== Training =====
+train:
+  grad_accum_steps: 8
+  amp: true
+  grad_clip_norm: 1.0
+  seed: 42
+  val_interval: 1
+  save_best_metric: "sem_mIoU"
+  resume: ""
+  max_points: 400000   # ★ 한 배치당 최대 포인트 수(메모리 피크 방지)
+
+# ===== Logging / Checkpoint =====
+log:
+  dir: "./logs"
+  interval_iter: 50
+
+ckpt:
+  dir: "./checkpoints"
+  keep_last: 3
+  best_name: "best_sem_mIoU.pt"
+  latest_name: "latest.pt"
+
+# ===== Device =====
+device:
+  gpu: true
+  devices: [0]
